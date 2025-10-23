@@ -12,4 +12,6 @@ def get_mongo_collection(collection_name: str):
     db = client[MONGO_DB]
     return db[collection_name]
 
+
 # Wrap db functions in this module to separate the database logic from the business logic
+    

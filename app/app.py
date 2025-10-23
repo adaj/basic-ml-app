@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import logging
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from intent_classifier import IntentClassifier
 from db.engine import get_mongo_collection
@@ -74,8 +75,7 @@ try:
     model_files = [f for f in os.listdir(os.path.join(os.path.dirname(__file__), "..", "intent_classifier", "models")) if f.endswith(".keras")]
     for model_file in model_files:
         model_path = os.path.join(os.path.dirname(__file__), "..", "intent_classifier", "models", model_file)
-        # Get the model name excluding "-vX.keras", being X any digit
-        model_name = re.search(r'-(v\d+)\.keras', model_file).group(1) if re.search(r'-(v\d+)\.keras', model_file) else model_file.replace(".keras", "")
+        model_name = model_file.replace(".keras", "")
         MODELS[model_name] = IntentClassifier(load_model=model_path)
     logger.info("Models loaded successfully")
 except Exception as e:
@@ -103,14 +103,18 @@ async def predict(text: str, owner: str = Depends(conditional_auth)):
             "all_probs": all_probs
         }
 
-    # Save the predictions into the database
-    collection.insert_one({
+    results = {
         "text": text, 
         "owner": owner, 
         "predictions": predictions, 
-        "timestamp": datetime.now(timezone.utc)
-    })
-    return predictions
+        "timestamp": int(datetime.now(timezone.utc).timestamp())
+    }
+    
+    collection.insert_one(results)
+    results['id'] = str(results['_id'])
+    results.pop('_id')
+
+    return JSONResponse(content=results)
 
 
 
