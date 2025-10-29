@@ -5,12 +5,12 @@ Este repositório foi criado com propósitos educacionais para o curso IMD3005 -
 
 ---
 
-## Overview do progresso:
+## 🌱 Overview do progresso:
 
 Acompanhe abaixo a linha temporal das alterações realizadas até o momento: 
 
 > _______________
-> ### Aula 1: Servindo predições com FastAPI
+> ### 1️⃣ : Servindo predições com FastAPI
 > Nesta aula, focamos em transformar o módulo `intent_classifier/` em uma API RESTful utilizando o FastAPI.
 >
 > **Tópicos abordados**:
@@ -23,7 +23,7 @@ Acompanhe abaixo a linha temporal das alterações realizadas até o momento:
 > _______________
 
 > _______________
-> ### Aula 2: Incorporando persistência, autenticação, e containerização
+> ### 2️⃣ : Incorporando persistência, autenticação, e containerização
 > 
 > Nesta aula, expandimos a arquitetura do projeto para incluir persistência de dados (via Mongo-DB), autenticação simples por token de acesso, e conteinerização com Docker.
 > 
@@ -36,7 +36,7 @@ Acompanhe abaixo a linha temporal das alterações realizadas até o momento:
 > _______________
 
 > _______________
-> ### Aula 3: Implementando integração contínua
+> ### 3️⃣ : Implementando integração contínua
 > ...
 > _______________
 
@@ -44,7 +44,7 @@ Acompanhe abaixo a linha temporal das alterações realizadas até o momento:
 
 ---
 
-## Estrutura atual do projeto
+## 🏛️ Estrutura atual do projeto
 
 ```shell
 .                               # "Working directory"
@@ -68,7 +68,7 @@ Acompanhe abaixo a linha temporal das alterações realizadas até o momento:
 └── .gitignore
 ```
 
-## Instruções para deploy em ambiente de teste
+## ⚙️ Instruções para deploy em ambiente de teste
 
 ### Localmente
 ```shell
