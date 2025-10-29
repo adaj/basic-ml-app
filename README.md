@@ -35,6 +35,10 @@ Nesta aula, expandimos a arquitetura do projeto para incluir persistência de da
 *   Autenticação simples baseada em token de acesso.
 *   Criação de um `Dockerfile` (e `docker-compose.yml`) para empacotar o serviço web em um container isolado.
 
+### Aula 3: Criando uma 
+
+
+
 ---
 
 ## Estrutura atual do projeto
