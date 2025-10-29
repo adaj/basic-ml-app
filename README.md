@@ -1,41 +1,44 @@
 # basic-ml-app
 
-Projeto em desenvolvimento...
-
-> Este código é de propósito educacional e pode conter alguns pequenos bugs que precisam ser consertados.
+Este repositório foi criado com propósitos educacionais para o curso IMD3005 - MLOPS, demonstrando como transformar um modelo treinado em um serviço web a ser implantado em produção. Atenção, pode conter pequenos bugs que precisam ser consertados. Para reportar bugs ou solicitar apoio, entre em contato por e-mail `adelson.araujo@imd.ufrn.br`.
 
 
 ---
 
 ## Overview do progresso:
 
-Esse repositório vem evoluindo ao longo das nossas aulas. Acompanhe abaixo as principais alterações realizadas. 
+Acompanhe abaixo a linha temporal das alterações realizadas até o momento: 
 
-### Aula 1: Construindo uma API de ML com FastAPI
+> _______________
+> ### Aula 1: Servindo predições com FastAPI
+> Nesta aula, focamos em transformar o módulo `intent_classifier/` em uma API RESTful utilizando o FastAPI.
+>
+> **Tópicos abordados**:
+> *   Exploração dos conceitos básicos do FastAPI para construção de APIs web.
+> *   Treinamento de modelos de ML e observação dos experimentos (via integração com `W&B`) para selecionar modelo eficaz.
+> *   Demonstração de como carregar um modelo de ML previamente treinado (`.keras`) para uso em produção.
+> *   Implementação de um endpoint HTTP (`/predict`) para receber requisições e retornar predições do modelo.
+> *   Criação do arquivo `app/app.py` com a lógica essencial para inicializar o FastAPI e expor o modelo. 
+> 
+> _______________
 
-Nesta aula, focamos em transformar o módulo `intent_classifier/` em uma API RESTful utilizando o FastAPI.
+> _______________
+> ### Aula 2: Incorporando persistência, autenticação, e containerização
+> 
+> Nesta aula, expandimos a arquitetura do projeto para incluir persistência de dados (via Mongo-DB), autenticação simples por token de acesso, e conteinerização com Docker.
+> 
+> **Tópicos abordados:**
+> 
+> *   Discussão sobre a separação de responsabilidades (backend, ML, banco de dados, testes, DAGs) para um projeto MLOps escalável.
+> *   Persistência de dados com MongoDB e PyMongo, salvando inputs e predições.
+> *   Autenticação simples baseada em token de acesso.
+> *   Criação de um `Dockerfile` (e `docker-compose.yml`) para empacotar o serviço web em um container isolado.
+> _______________
 
-**Tópicos abordados:**
-
-*   Exploração dos conceitos básicos do FastAPI para construção de APIs web.
-*   Treinamento de modelos de ML e observação dos experimentos (via `W&B`) para selecionar modelo eficaz.
-*   Demonstração de como carregar um modelo de ML previamente treinado (`.keras`) para uso em produção.
-*   Implementação de um endpoint HTTP (`/predict`) para receber requisições e retornar predições do modelo.
-*   Criação do arquivo `app/app.py` com a lógica essencial para inicializar o FastAPI e expor o modelo.
-
-
-### Aula 2: Expandindo com persistência de dados, autenticação, e containerização
-
-Nesta aula, expandimos a arquitetura do projeto para incluir persistência de dados (via Mongo-DB), autenticação simples por token de acesso, e conteinerização com Docker.
-
-**Tópicos abordados:**
-
-*   Discussão sobre a separação de responsabilidades (backend, ML, banco de dados, testes, DAGs) para um projeto MLOps escalável.
-*   Persistência de dados com MongoDB e PyMongo, salvando inputs e predições.
-*   Autenticação simples baseada em token de acesso.
-*   Criação de um `Dockerfile` (e `docker-compose.yml`) para empacotar o serviço web em um container isolado.
-
-### Aula 3: Criando uma 
+> _______________
+> ### Aula 3: Implementando integração contínua
+> ...
+> _______________
 
 
 
@@ -73,8 +76,8 @@ Nesta aula, expandimos a arquitetura do projeto para incluir persistência de da
 conda create -n intent-clf python=3.11
 conda activate intent-clf
 pip install -r requirements.txt # instalar as dependências
-## Ajuste seu .env (ex: ENV=dev)
-## ...
+## Ajuste seu .env com as variáveis de ambiente necessárias
+export ENV=dev
 ## Em .env, se ENV=prod, você precisará criar um token
 ## python app/auth.py create --owner="nome" --expires_in_days=365
 # Suba o serviço web e acesse-o em localhost:8000

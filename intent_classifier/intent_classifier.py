@@ -49,10 +49,6 @@ import wandb
 from wandb.integration.keras import WandbMetricsLogger, WandbEvalCallback # WandbModelCheckpoint
 
 
-PUNCTUATION_TOKENS = {
-    "?": "QUESTION_MARK",
-}
-
 @register_keras_serializable()
 class HubLayer(tf.keras.layers.Layer):
     def __init__(self, hub_url, trainable=False, **kwargs):
@@ -64,7 +60,7 @@ class HubLayer(tf.keras.layers.Layer):
 
 @dataclass
 class Config:
-    dataset_name: str
+    dataset_name: str = "undefined"
     codes : List[str] = None
     architecture: str = "v0.1.5"
     task: str = "undefined"
@@ -109,17 +105,18 @@ def fetch_model_from_wandb(url: str) -> str:
         return url
 
     api_key = os.environ.get("WANDB_API_KEY")
-    if not api_key or len(api_key) != 40:
-        raise ValueError("WANDB_API_KEY is required and must be 40 characters long")
-
-    wandb.login(key=api_key)
+    if not api_key:
+        wandb.login()
+    else:
+        wandb.login(key=api_key)
+    
     api = wandb.Api()
     if ":" not in url:
         url = f"{url}:latest"
     artifact = api.artifact(url)
     
     # Create models directory if it doesn't exist
-    models_dir = Path("models")
+    models_dir = Path(os.path.join(os.path.dirname(__file__), "models"))
     models_dir.mkdir(exist_ok=True)
     
     # Download artifact to models directory
@@ -134,23 +131,28 @@ def fetch_model_from_wandb(url: str) -> str:
 
 class IntentClassifier:
 
-    def __init__(self, config = None, load_model = None, examples_file = None, handle_punctuation = False):
-        self.handle_punctuation = handle_punctuation
+    def __init__(self, config = None, load_model = None, examples_file = None):
         if load_model is None:
-            env_url = os.environ.get("WANDB_MODEL_URL")
-            if env_url:
-                try:
-                    load_model = fetch_model_from_wandb(env_url)
-                except Exception as exc:
-                    print(f"Failed to fetch model from {env_url}: {exc}")
+            self.model = None
+        else:
+            if os.path.exists(load_model):
+                self.model = tf.keras.models.load_model(load_model)
+                print(f"Loaded keras model from {load_model}.")
+            else:
+                # Try to load from W&B
+                local_model_path = fetch_model_from_wandb(load_model) # local_model_path é a string do caminho
+                self.model = tf.keras.models.load_model(local_model_path)
+                print(f"Loaded keras model from {load_model}.")
+            if self.model is None:
+                raise ValueError(f"Model file not found: {load_model}. Try to load from W&B or provide a valid path to a Keras model file.")
         # Load config
-        self._load_config(config, load_model, examples_file)
+        self._load_config(config, load_model)
         # Load intents from the examples file if provided
         self._load_intents(examples_file)
         # Initialize stop_words
         self._load_stop_words(self.config.stop_words_file)
         # Set up one-hot encoder
-        self._setup_encoder()
+        self._setup_onehot_encoder()
         # Set up W&B
         if self.config.wandb_project:
               # Create wandb run instance
@@ -162,11 +164,7 @@ class IntentClassifier:
                   artifact.add_file(examples_file) # Assuming 'examples_file' is the dataset file
                   self.wandb_run.log_artifact(artifact)
 
-    def finish_wandb(self):
-        if self.config.wandb_project and self.wandb_run:
-            self.wandb_run.finish()
-
-    def _load_config(self, config, load_model, examples_file):
+    def _load_config(self, config, load_model):
         if isinstance(config, str):
             with open(config, 'r') as f:
                 self.config = Config(**yaml.safe_load(f))
@@ -176,19 +174,18 @@ class IntentClassifier:
         elif config is None:
             # Load from a model
             if load_model is not None:
-                self.model = tf.keras.models.load_model(load_model)
-                print(f"Loaded keras model from {load_model}.")
+                # self.model = tf.keras.models.load_model(load_model)
+                # print(f"Loaded keras model from {load_model}.")
                 config_path = load_model.replace(".keras", "_config.yml")
                 if not os.path.exists(config_path):
-                    alt_path = os.path.join("tools", "models", os.path.basename(config_path))
-                    if os.path.exists(alt_path):
-                        config_path = alt_path
+                    raise ValueError('The `config` object must be provided for this IntentClassifier.')
                 with open(config_path, 'r') as f:
                     self.config = Config(**yaml.safe_load(f))
             else:
-                raise ValueError("config must be a path to a YAML file, a Config object, or None.")
-        else:
-            raise ValueError("config must be a path to a YAML file, a Config object, or None.")
+                # We must load the config of this model properly...
+                raise ValueError('The `config` object must be provided for this IntentClassifier.')
+        return self.config
+    
     def _load_intents(self, examples_file):
         self.examples_file = examples_file
         if examples_file is not None:
@@ -203,12 +200,6 @@ class IntentClassifier:
                 labels += [i['intent']]*len(i['examples'])
             input_text = np.array(input_text)
             labels = np.array(labels)
-            # Preprocess input_text
-            # 1 - Iterate on input_text and replace punctuation with " <punctuation>" (apparently it helps the sentence encoder)
-            if self.handle_punctuation:
-                for i, text in enumerate(input_text):
-                    for p, t in PUNCTUATION_TOKENS.items():
-                        input_text[i] = input_text[i].replace(p, f" {t} ").strip()
             # Shuffle data
             indices = np.arange(len(labels))
             np.random.shuffle(indices)
@@ -220,6 +211,8 @@ class IntentClassifier:
         else: # Means that the example_file is not provided
             # Then the model will be used only to predict, no need to load training data
             self.codes = self.config.codes
+        return self.codes
+    
     def _load_stop_words(self, stop_words_file: str):
         if stop_words_file is None:
             self.stop_words = []
@@ -228,12 +221,13 @@ class IntentClassifier:
             self.stop_words = f.read().split('\n')
         print(f"Loaded {len(self.stop_words)} stop words from {stop_words_file}.")
         return self
-    def _setup_encoder(self):
+    
+    def _setup_onehot_encoder(self):
         assert self.codes is not None, "codes must be set before setting up the encoder."
-        if len(self.codes) == 1:
-            self.codes = self.codes[0]
         self.onehot_encoder = OneHotEncoder(categories=[self.codes],)\
                                   .fit(np.array(self.codes).reshape(-1, 1))
+        return self.onehot_encoder
+
     def _get_callbacks(self):
         callbacks = []
         if self.config.callback_patience > 0:
@@ -261,6 +255,10 @@ class IntentClassifier:
             lr_scheduler_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler)
             callbacks.append(lr_scheduler_callback)
         return callbacks
+    
+    def finish_wandb(self):
+        if self.config.wandb_project and self.wandb_run:
+            self.wandb_run.finish()
 
     def preprocess_text(self, text):
         text = tf.strings.lower(text)
@@ -276,7 +274,8 @@ class IntentClassifier:
                 # Instead of setting it to an empty string:
                 # text = ""
                 # We should create a dummy string with enough words
-                text = tf.constant("<> " * (self.config.min_words + 1))
+                padding = " ".join(["<>"] * (self.config.min_words + 1))
+                text = tf.constant(padding)
         return tf.expand_dims(tf.strings.as_string(text), 0)  # Convert to 1-D Tensor
 
     def make_model(self, config: Config):

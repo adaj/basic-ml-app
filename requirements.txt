@@ -1,6 +1,4 @@
 fire
-tqdm
-openpyxl
 pandas
 scikit-learn
 matplotlib
@@ -13,6 +11,7 @@ tensorflow-hub==0.16.1
 wandb==0.21.0
 protobuf==5.29.5
 pydantic==2.11.7
+pytest
 uvicorn==0.38.0
 python-dotenv==1.1.1
 fastapi
