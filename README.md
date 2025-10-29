@@ -36,8 +36,12 @@ Acompanhe abaixo a linha temporal das alterações realizadas até o momento:
 > _______________
 
 > _______________
-> ### 3️⃣ : Implementando integração contínua
-> ...
+> ### 3️⃣ : Implementando integração contínua (CI) com GitHub actions
+>
+> **Tópicos abordados:**
+> *   Importância dos testes automatizados e da Integração Contínua (CI) no desenvolvimento de MLOps.
+> *   Criação testes unitários e de integração.
+> *   Configurar um workflow básico de GitHub Actions para executar os testes unitários e construir a imagem Docker do serviço FastAPI.
 > _______________
 
 
