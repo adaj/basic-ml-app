@@ -89,7 +89,7 @@ Routes
 
 @app.get("/")
 async def root():
-    return {"message": "Basic ML App is running in {ENV} mode"}
+    return {"message": f"Basic ML App is running in {ENV} mode"}
 
 
 @app.post("/predict")
